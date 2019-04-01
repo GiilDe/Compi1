@@ -5,15 +5,28 @@ void showToken(char*);
 void doError(char*);
 %}
 
+
+
+ws ([\r\n\t ])
+hexadecimal_number ([\+\-]?0x[0-9a-fA-F]+)
+printable_char ([\x20-\x7E\x09\x0A\x0D])
 digit ([0-9])
 identifier_char ([0-9a-zA-Z\-_])
 escape_seq (\\(.+))
 ascii_escape_seq (\\[0-9a-fA-F]{1,6})
-signed_number ([+-]?[0-9]+)
+letter ([a-zA-Z])
+s_num ([+-]?[0-9]+)
+number ([0-9]+)
+
+
+
 %%
 
+/\*{printable_char}*\*/ showToken("COMMENT")
+(\-)?[a-zA-Z]{identifier_char}* showToken("NAME")
+#(letter|number|(\-letter)){identifier_char}* showToken("HASHID")
 @import showToken("IMPORT");
-!{whitespace}*[iI][mM][pP][oO][rR][tT][aA][nN][tT]  showToken("IMPORTANT");
+!{ws}*[iI][mM][pP][oO][rR][tT][aA][nN][tT]  showToken("IMPORTANT");
 
 [>\+~]                                  showToken("COMB");
 :                                       showToken("COLON")
@@ -25,9 +38,9 @@ signed_number ([+-]?[0-9]+)
 =                                       showToken("EQUAL");
 \*                                      showToken("ASTERISK");
 \.                                      showToken("DOT");
-({signed_number}|{hexadecimal_number})  showToken("NUMBER");
+({s_num}|{hexadecimal_number})          showToken("NUMBER");
 ({digit}*(\.{digit}+)?)([a-z]+|%)       showToken("UNIT");
-rgb({whitespace}*{signed_number}{whitespace}*,{whitespace}*{signed_number}{whitespace}*,{whitespace}*{signed_number}{whitespace}*)
+rgb({ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*) showToken("RGB");
 . doError();
 %%
 
