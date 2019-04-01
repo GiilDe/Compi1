@@ -1,7 +1,9 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+void showStringToken(char*);
 void showToken(char*);
+void doCharError(char*);
 void doError(char*);
 %}
 
@@ -15,41 +17,57 @@ identifier_char ([0-9a-zA-Z\-_])
 escape_seq (\\(.+))
 ascii_escape_seq (\\[0-9a-fA-F]{1,6})
 letter ([a-zA-Z])
-s_num ([+-]?[0-9]+)
+s_num ([\+-]?[0-9]+)
 number ([0-9]+)
 
 
 
 %%
 
-/\*{printable_char}*\*/ showToken("COMMENT")
-(\-)?[a-zA-Z]{identifier_char}* showToken("NAME")
-#(letter|number|(\-letter)){identifier_char}* showToken("HASHID")
+\/\*{printable_char}*\*\/ showToken("COMMENT");
+(\-)?[a-zA-Z]{identifier_char}* showToken("NAME");
+#({letter}|{number}|(-{letter})){identifier_char}* showToken("HASHID");
 @import showToken("IMPORT");
 !{ws}*[iI][mM][pP][oO][rR][tT][aA][nN][tT]  showToken("IMPORTANT");
 
-[>\+~]                                  showToken("COMB");
-:                                       showToken("COLON")
-;                                       showToken("SEMICOLON");
-\{                                      showToken("LBRACE");
-\}                                      showToken("RBRACE");
-\[                                      showToken("LBRACKET");
-\]                                      showToken("RBRACKET");
-=                                       showToken("EQUAL");
-\*                                      showToken("ASTERISK");
-\.                                      showToken("DOT");
-({s_num}|{hexadecimal_number})          showToken("NUMBER");
-({digit}*(\.{digit}+)?)([a-z]+|%)       showToken("UNIT");
+[>\+~]                                            showToken("COMB");
+:                                                 showToken("COLON");
+;                                                 showToken("SEMICOLON");
+\{                                                showToken("LBRACE");
+\}                                                showToken("RBRACE");
+\[                                                showToken("LBRACKET");
+\]                                                showToken("RBRACKET");
+=                                                 showToken("EQUAL");
+\*                                                showToken("ASTERISK");
+\.                                                showToken("DOT");
+({s_num}|{hexadecimal_number})                    showToken("NUMBER");
+(({digit}+)|({digit}*\.{digit}+))([a-z]+|%)       showToken("UNIT");
 rgb({ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*) showToken("RGB");
-. doError();
+
+% doCharError("%");
+! doCharError("%");
+@ doCharError("@");
+{ws}+ ;
+. doError("ERROR");
 %%
+
+void showStringToken(char * str) {
+
+}
 
 void showToken(char * name) {
   // TODO Implement properly
   printf("%d %s %s\n", yylineno, name, yytext);
 }
 
-void doError() {
+void doCharError(char * c_name) {
   // TODO Implement
+  printf("Error %s\n", c_name);
+  exit(0);
+}
+
+void doError(char * message) {
+  // TODO Implement
+  printf("Error %s\n", message);
   exit(0);
 }
