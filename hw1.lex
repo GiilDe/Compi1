@@ -19,17 +19,20 @@ ascii_escape_seq (\\[0-9a-fA-F]{1,6})
 letter ([a-zA-Z])
 s_num ([\+-]?[0-9]+)
 number ([0-9]+)
-
+printable_char_but_double_commas_slash_n ([\x20-\x21\x23-\x5B\x5D-\x7E\x09])
+printable_char_but_commas ([\x20-\x26\x28-\x5B\x5D-\x7E\x09])
+partial_escape_sequences ((\\n)|(\\r)|(\\t)|(\\\\))
 
 
 %%
-
 \/\*{printable_char}*\*\/ showToken("COMMENT");
 (\-)?[a-zA-Z]{identifier_char}* showToken("NAME");
 #({letter}|{number}|(-{letter})){identifier_char}* showToken("HASHID");
-@import showToken("IMPORT");
-!{ws}*[iI][mM][pP][oO][rR][tT][aA][nN][tT]  showToken("IMPORTANT");
+(\"{printable_char_but_double_commas_slash_n}|{partial_escape_sequences}*\")|('{printable_char_but_commas}|{partial_escape_sequences}*') showToken("STRING")
 
+
+@import showToken("IMPORT");
+!{ws}*[iI][mM][pP][oO][rR][tT][aA][nN][tT]        showToken("IMPORTANT");
 [>\+~]                                            showToken("COMB");
 :                                                 showToken("COLON");
 ;                                                 showToken("SEMICOLON");
