@@ -1,13 +1,16 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-void showStringToken(char*);
+#include <string.h>
+void showStringToken();
+void showTokenMessage(char *, char *);
 void showToken(char*);
 void doCharError(char*);
 void doError(char*);
 %}
 
 
+%option yylineno
 
 ws ([\r\n\t ])
 hexadecimal_number ([\+\-]?0x[0-9a-fA-F]+)
@@ -17,18 +20,18 @@ identifier_char ([0-9a-zA-Z\-_])
 escape_seq (\\(.+))
 ascii_escape_seq (\\[0-9a-fA-F]{1,6})
 letter ([a-zA-Z])
-s_num ([\+-]?[0-9]+)
+s_num ([\+\-]?[0-9]+)
 number ([0-9]+)
 printable_char_but_double_commas_slash_n ([\x20-\x21\x23-\x5B\x5D-\x7E\x09])
 printable_char_but_commas ([\x20-\x26\x28-\x5B\x5D-\x7E\x09])
-partial_escape_sequences ((\\n)|(\\r)|(\\t)|(\\\\))
+partial_escape_sequences ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
 
 
 %%
 \/\*{printable_char}*\*\/ showToken("COMMENT");
 (\-)?[a-zA-Z]{identifier_char}* showToken("NAME");
 #({letter}|{number}|(-{letter})){identifier_char}* showToken("HASHID");
-(\"{printable_char_but_double_commas_slash_n}|{partial_escape_sequences}*\")|('{printable_char_but_commas}|{partial_escape_sequences}*') showToken("STRING")
+(\"({printable_char_but_double_commas_slash_n}|{partial_escape_sequences})*\")|('({printable_char_but_commas}|{partial_escape_sequences})*') showStringToken();
 
 
 @import showToken("IMPORT");
@@ -54,13 +57,108 @@ rgb({ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*) showToken("RGB");
 . doError("ERROR");
 %%
 
-void showStringToken(char * str) {
+static void shiftString(char *src, int index, int len) {
+  for (char * p = src + index; *p != '\0'; p++) {
+    *p = *(p+len);
+  }
+}
 
+static int checkSlash(char *src) {
+  char no_escape_char = *(src+1);
+  if(no_escape_char == '\0'){
+    return 0;
+  }
+
+  char escaped_char;
+  int should_escape = 1;
+  int is_hex = 0;
+  // Handle case of a single-character escape
+  switch (no_escape_char) {
+    case 'n': escaped_char = '\n'; break;
+    case 'r': escaped_char = '\r'; break;
+    case 't': escaped_char = '\t'; break;
+    case '\\': escaped_char = '\\'; break;
+    default: should_escape = 0;
+  }
+
+  if(should_escape) {
+    *src = escaped_char;
+    for (char * p = src + 1; *p != '\0'; p++) {
+      *p = *(p+1);
+    }
+    return 1;
+  } else {
+    // We assume it is a hex-escaped character
+    char * p = src + 2;
+    int len = 0;
+    while (len < 6
+      && ((p[len] >= '0' && p[len] <= '9')
+      || (p[len] >= 'a' && p[len] <= 'f')
+      || (p[len] >= 'A' && p[len] <= 'F')
+      )) {
+      len++;
+    }
+    char* escape_seq = malloc(sizeof(char) * (len + 1));
+    strncpy(escape_seq, p, len);
+    escape_seq[len] = '\0';
+    int hex = strtol(escape_seq, NULL, 16);
+    free(escape_seq);
+
+    *src = (char) hex;
+    printf("SO FAR: %s\n", src);
+    for (char * p = src + 1; *(p + len) != '\0'; p++) {
+      *p = *(p+1+len);
+    }
+    return 1 + len;
+  }
+  return 0;
+}
+
+// Format a STRING lexme and replace all escaped characters
+// With real characters
+static void formatString(char * src) {
+  while (*src != '\0') {
+    if (*src == '\\') {
+      src += checkSlash(src);
+    }
+    src++;
+  }
+}
+
+// Remove the brackets of a STRING lexme
+static void removeBrackets(char * dest, char * str, int size) {
+  if (size < 2) {
+    // Should not happen
+    return;
+  }
+  int new_size = size - 2;
+  strcpy(dest, ++str);
+  dest[new_size] = '\0';
+}
+
+void showStringToken() {
+  char * formatted = malloc(sizeof(char) * (yyleng - 1));
+  int should_format = 1;
+  if (yytext[0] == '\"') {
+    should_format = 0;
+  }
+
+  removeBrackets(formatted, yytext, yyleng);
+  if (should_format) {
+    formatString(formatted);
+  }
+  showTokenMessage("STRING", formatted);
+
+  free (formatted);
+}
+
+void showTokenMessage(char * token, char * message) {
+  // TODO Implement properly
+  printf("%d %s %s\n", yylineno, token, message);
 }
 
 void showToken(char * name) {
-  // TODO Implement properly
-  printf("%d %s %s\n", yylineno, name, yytext);
+  showTokenMessage(name, yytext);
 }
 
 void doCharError(char * c_name) {
