@@ -7,15 +7,27 @@
 #define LF    0x0A
 #define CR    0x0D
 
+#define IS_ASCII(char) \
+  (((char) >= '0' && (char) <= '9') \
+  || ((char) >= 'a' && (char) <= 'f') \
+  || ((char) >= 'A' && (char) <= 'F') \
+  )
+
+
 void showStringToken();
+void showCommentToken();
 void showTokenMessage(char *, char *);
 void showToken(char*);
-void doCharError(char*);
-void doError(char*);
+void print_error(char*);
+void print_escape_sequence_error();
+void show_comment_error();
 %}
 
 
 %option yylineno
+%option noyywrap
+
+%x COMMENT
 
 ws ([\r\n\t ])
 hexadecimal_number ([\+\-]?0x[0-9a-fA-F]+)
@@ -33,8 +45,10 @@ partial_escape_sequences ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
 
 
 %%
-\/\*{printable_char}*\*\/ showToken("COMMENT");
-(\-)?[a-zA-Z]{identifier_char}* showToken("NAME");
+\/\* BEGIN(COMMENT);
+<COMMENT>\/\*      show_comment_error();
+<COMMENT>{printable_char}*\*\/ BEGIN(INITIAL); showCommentToken();
+
 #({letter}|{number}|(-{letter})){identifier_char}* showToken("HASHID");
 (\"({printable_char_but_double_commas_slash_n}|{partial_escape_sequences})*\")|('({printable_char_but_commas}|{partial_escape_sequences})*') showStringToken();
 
@@ -55,11 +69,16 @@ partial_escape_sequences ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
 (({digit}+)|({digit}*\.{digit}+))([a-z]+|%)       showToken("UNIT");
 rgb({ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*) showToken("RGB");
 
-% doCharError("%");
-! doCharError("%");
-@ doCharError("@");
-{ws}+ ;
-. doError("ERROR");
+
+\"              print_error("unclosed string");
+{escape_seq}    print_error("undefined escape sequence");
+rgb             print_error("in rgb parameters");
+%               print_error("%");
+!               print_error("%");
+@               print_error("@");
+{ws} ;
+<COMMENT>.      print_error("unclosed comment");
+(\-)?[a-zA-Z]{identifier_char}* showToken("NAME");
 %%
 
 static int is_printable_char(int hex) {
@@ -86,7 +105,8 @@ static int find_ascii(char * str, int size) {
   return hex;
 }
 
-static int check_slash(char *src) {
+
+static int format_next_escape_str(char *src) {
   char no_escape_char = *(src+1);
   if(no_escape_char == '\0'){
     return 0;
@@ -114,13 +134,8 @@ static int check_slash(char *src) {
     // We assume it is a hex-escaped character
     char * p = src + 1;
     int len = 0;
-    while (len < 6
-      && ((p[len] >= '0' && p[len] <= '9')
-      || (p[len] >= 'a' && p[len] <= 'f')
-      || (p[len] >= 'A' && p[len] <= 'F')
-      )) {
-      len++;
-    }
+    // Count the length of the escaped ascii string [1-6]
+    while (len < 6 && IS_ASCII(p[len])) len++;
     int ascii = find_ascii(p, len);
 
     int src_offset;
@@ -145,17 +160,17 @@ static int check_slash(char *src) {
 
 // Format a STRING lexme and replace all escaped characters
 // With real characters
-static void formatString(char * src) {
+static void format_string(char * src) {
   while (*src != '\0') {
     if (*src == '\\') {
-      src += check_slash(src);
+      src += format_next_escape_str(src);
     }
     src++;
   }
 }
 
 // Remove the brackets of a STRING lexme
-static void removeBrackets(char * dest, char * str, int size) {
+static void remove_brackets(char * dest, char * str, int size) {
   if (size < 2) {
     // Should not happen
     return;
@@ -172,13 +187,28 @@ void showStringToken() {
     should_format = 0;
   }
 
-  removeBrackets(formatted, yytext, yyleng);
+  remove_brackets(formatted, yytext, yyleng);
   if (should_format) {
-    formatString(formatted);
+    format_string(formatted);
   }
   showTokenMessage("STRING", formatted);
 
   free (formatted);
+}
+
+void showCommentToken() {
+  char * comment = yytext;
+  int lines = 1;
+  while (*comment != '\0') {
+    if (*comment == '\n' && *(comment + 1) == '\r') {
+      lines++;
+      comment++;
+    } else if(*comment == '\n' || *comment == '\r') {
+      lines++;
+    }
+    comment++;
+  }
+  printf("%d COMMENT %d\n", yylineno, lines);
 }
 
 void showTokenMessage(char * token, char * message) {
@@ -190,14 +220,18 @@ void showToken(char * name) {
   showTokenMessage(name, yytext);
 }
 
-void doCharError(char * c_name) {
+void print_error(char * c_name) {
   // TODO Implement
   printf("Error %s\n", c_name);
   exit(0);
 }
 
-void doError(char * message) {
-  // TODO Implement
-  printf("Error %s\n", message);
+void print_escape_sequence_error() {
+  // TODO: Fix not showing sequence
+  printf("Error undefined escape sequence %s\n", yytext);
+}
+
+void show_comment_error() {
+  printf("Warning nested comment");
   exit(0);
 }
