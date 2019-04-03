@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define TAB   0x09
+#define LF    0x0A
+#define CR    0x0D
+
 void showStringToken();
 void showTokenMessage(char *, char *);
 void showToken(char*);
@@ -57,13 +62,31 @@ rgb({ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*) showToken("RGB");
 . doError("ERROR");
 %%
 
-static void shiftString(char *src, int index, int len) {
+static int is_printable_char(int hex) {
+  return (hex >= 0x20 && hex <= 0x7E)
+  || hex == TAB
+  || hex == CR
+  || hex == LF;
+}
+
+static void shift_string(char *src, int index, int len) {
   for (char * p = src + index; *p != '\0'; p++) {
     *p = *(p+len);
   }
 }
 
-static int checkSlash(char *src) {
+// Given a string and the length of a hex-escaped character, find it's
+// ASCII value
+static int find_ascii(char * str, int size) {
+  char* escape_seq = malloc(sizeof(char) * (size + 1));
+  strncpy(escape_seq, str, size);
+  escape_seq[size] = '\0';
+  int hex = strtol(escape_seq, NULL, 16);
+  free(escape_seq);
+  return hex;
+}
+
+static int check_slash(char *src) {
   char no_escape_char = *(src+1);
   if(no_escape_char == '\0'){
     return 0;
@@ -86,10 +109,10 @@ static int checkSlash(char *src) {
     for (char * p = src + 1; *p != '\0'; p++) {
       *p = *(p+1);
     }
-    return 1;
+    return 0;
   } else {
     // We assume it is a hex-escaped character
-    char * p = src + 2;
+    char * p = src + 1;
     int len = 0;
     while (len < 6
       && ((p[len] >= '0' && p[len] <= '9')
@@ -98,18 +121,24 @@ static int checkSlash(char *src) {
       )) {
       len++;
     }
-    char* escape_seq = malloc(sizeof(char) * (len + 1));
-    strncpy(escape_seq, p, len);
-    escape_seq[len] = '\0';
-    int hex = strtol(escape_seq, NULL, 16);
-    free(escape_seq);
+    int ascii = find_ascii(p, len);
 
-    *src = (char) hex;
-    printf("SO FAR: %s\n", src);
-    for (char * p = src + 1; *(p + len) != '\0'; p++) {
-      *p = *(p+1+len);
+    int src_offset;
+    if (is_printable_char(ascii)) {
+      // Print it
+      *src = (char) ascii;
+      src_offset = 0;
+    } else {
+      // Ignore it
+      src_offset = 1;
+      p--;
     }
-    return 1 + len;
+
+    while (*(p + len - 1) != '\0') {
+      *p = *(p + len + src_offset);
+      p++;
+    }
+    return 1;
   }
   return 0;
 }
@@ -119,7 +148,7 @@ static int checkSlash(char *src) {
 static void formatString(char * src) {
   while (*src != '\0') {
     if (*src == '\\') {
-      src += checkSlash(src);
+      src += check_slash(src);
     }
     src++;
   }

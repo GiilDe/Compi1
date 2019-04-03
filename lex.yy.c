@@ -643,12 +643,17 @@ char *yytext;
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define TAB   0x09
+#define LF    0x0A
+#define CR    0x0D
+
 void showStringToken();
 void showTokenMessage(char *, char *);
 void showToken(char*);
 void doCharError(char*);
 void doError(char*);
-#line 652 "lex.yy.c"
+#line 657 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -830,9 +835,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 30 "hw1.lex"
+#line 35 "hw1.lex"
 
-#line 836 "lex.yy.c"
+#line 841 "lex.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -928,133 +933,133 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 31 "hw1.lex"
+#line 36 "hw1.lex"
 showToken("COMMENT");
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 32 "hw1.lex"
+#line 37 "hw1.lex"
 showToken("NAME");
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 33 "hw1.lex"
+#line 38 "hw1.lex"
 showToken("HASHID");
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 34 "hw1.lex"
+#line 39 "hw1.lex"
 showStringToken();
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 37 "hw1.lex"
+#line 42 "hw1.lex"
 showToken("IMPORT");
 	YY_BREAK
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 38 "hw1.lex"
+#line 43 "hw1.lex"
 showToken("IMPORTANT");
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 39 "hw1.lex"
+#line 44 "hw1.lex"
 showToken("COMB");
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 40 "hw1.lex"
+#line 45 "hw1.lex"
 showToken("COLON");
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 41 "hw1.lex"
+#line 46 "hw1.lex"
 showToken("SEMICOLON");
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 42 "hw1.lex"
+#line 47 "hw1.lex"
 showToken("LBRACE");
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 43 "hw1.lex"
+#line 48 "hw1.lex"
 showToken("RBRACE");
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 44 "hw1.lex"
+#line 49 "hw1.lex"
 showToken("LBRACKET");
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 45 "hw1.lex"
+#line 50 "hw1.lex"
 showToken("RBRACKET");
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 46 "hw1.lex"
+#line 51 "hw1.lex"
 showToken("EQUAL");
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 47 "hw1.lex"
+#line 52 "hw1.lex"
 showToken("ASTERISK");
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 48 "hw1.lex"
+#line 53 "hw1.lex"
 showToken("DOT");
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 49 "hw1.lex"
+#line 54 "hw1.lex"
 showToken("NUMBER");
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 50 "hw1.lex"
+#line 55 "hw1.lex"
 showToken("UNIT");
 	YY_BREAK
 case 19:
 /* rule 19 can match eol */
 YY_RULE_SETUP
-#line 51 "hw1.lex"
+#line 56 "hw1.lex"
 showToken("RGB");
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 53 "hw1.lex"
+#line 58 "hw1.lex"
 doCharError("%");
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 54 "hw1.lex"
+#line 59 "hw1.lex"
 doCharError("%");
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 55 "hw1.lex"
+#line 60 "hw1.lex"
 doCharError("@");
 	YY_BREAK
 case 23:
 /* rule 23 can match eol */
 YY_RULE_SETUP
-#line 56 "hw1.lex"
+#line 61 "hw1.lex"
 ;
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 57 "hw1.lex"
+#line 62 "hw1.lex"
 doError("ERROR");
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 58 "hw1.lex"
+#line 63 "hw1.lex"
 ECHO;
 	YY_BREAK
-#line 1058 "lex.yy.c"
+#line 1063 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2063,17 +2068,35 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 58 "hw1.lex"
+#line 63 "hw1.lex"
 
 
 
-static void shiftString(char *src, int index, int len) {
+static int is_printable_char(int hex) {
+  return (hex >= 0x20 && hex <= 0x7E)
+  || hex == TAB
+  || hex == CR
+  || hex == LF;
+}
+
+static void shift_string(char *src, int index, int len) {
   for (char * p = src + index; *p != '\0'; p++) {
     *p = *(p+len);
   }
 }
 
-static int checkSlash(char *src) {
+// Given a string and the length of a hex-escaped character, find it's
+// ASCII value
+static int find_ascii(char * str, int size) {
+  char* escape_seq = malloc(sizeof(char) * (size + 1));
+  strncpy(escape_seq, str, size);
+  escape_seq[size] = '\0';
+  int hex = strtol(escape_seq, NULL, 16);
+  free(escape_seq);
+  return hex;
+}
+
+static int check_slash(char *src) {
   char no_escape_char = *(src+1);
   if(no_escape_char == '\0'){
     return 0;
@@ -2096,10 +2119,10 @@ static int checkSlash(char *src) {
     for (char * p = src + 1; *p != '\0'; p++) {
       *p = *(p+1);
     }
-    return 1;
+    return 0;
   } else {
     // We assume it is a hex-escaped character
-    char * p = src + 2;
+    char * p = src + 1;
     int len = 0;
     while (len < 6
       && ((p[len] >= '0' && p[len] <= '9')
@@ -2108,18 +2131,25 @@ static int checkSlash(char *src) {
       )) {
       len++;
     }
-    char* escape_seq = malloc(sizeof(char) * (len + 1));
-    strncpy(escape_seq, p, len);
-    escape_seq[len] = '\0';
-    int hex = strtol(escape_seq, NULL, 16);
-    free(escape_seq);
+    int ascii = find_ascii(p, len);
+    printf("ascii for %s is %c\n", p, (char) ascii);
 
-    *src = (char) hex;
-    printf("SO FAR: %s\n", src);
-    for (char * p = src + 1; *(p + len) != '\0'; p++) {
-      *p = *(p+1+len);
+    int src_offset;
+    if (is_printable_char(ascii)) {
+      // Print it
+      *src = (char) ascii;
+      src_offset = 0;
+    } else {
+      // Ignore it
+      src_offset = 1;
+      p--;
     }
-    return 1 + len;
+
+    while (*(p + len - 1) != '\0') {
+      *p = *(p + len + src_offset);
+      p++;
+    }
+    return 1;
   }
   return 0;
 }
@@ -2129,7 +2159,7 @@ static int checkSlash(char *src) {
 static void formatString(char * src) {
   while (*src != '\0') {
     if (*src == '\\') {
-      src += checkSlash(src);
+      src += check_slash(src);
     }
     src++;
   }
