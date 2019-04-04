@@ -1,0 +1,42 @@
+/* this
+ is a multiline
+ comment */
+
+ /*so*is*this*/
+
+helloWorld;
+-dash_underscore;
+-dashing----thru11-;
+
+#deadbeef
+
+#123456_hello
+
+#-There
+
+#124604;
+
+@import ("lib.css");
+
+!important;
+
+! iMpOrTaNt;
+
+!
+  important;
+
+"simple";
+
+'also simple';
+
+"escape new lines\n";
+
+'"hex"\0045a';
+'\011111HELLO';
+"\01 'h'hello";
+
+table + all {
+  attribute: 80%;
+}
+table ~ div#first img:hover
+table.colorful > input[type="text"]

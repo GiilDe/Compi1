@@ -13,82 +13,16 @@
   || ((char) >= 'A' && (char) <= 'F') \
   )
 
+int comment_lines = 1;
 
-void showStringToken();
-void showCommentToken();
-void showTokenMessage(char *, char *);
-void showToken(char*);
-void print_error(char*);
-void print_escape_sequence_error();
-void show_comment_error();
-%}
-
-
-%option yylineno
-%option noyywrap
-
-%x COMMENT
-
-ws ([\r\n\t ])
-hexadecimal_number ([\+\-]?0x[0-9a-fA-F]+)
-printable_char ([\x20-\x7E\x09\x0A\x0D])
-digit ([0-9])
-identifier_char ([0-9a-zA-Z\-_])
-escape_seq (\\(.+))
-ascii_escape_seq (\\[0-9a-fA-F]{1,6})
-letter ([a-zA-Z])
-s_num ([\+\-]?[0-9]+)
-number ([0-9]+)
-printable_char_but_double_commas_slash_n ([\x20-\x21\x23-\x5B\x5D-\x7E\x09])
-printable_char_but_commas ([\x20-\x26\x28-\x5B\x5D-\x7E\x09])
-partial_escape_sequences ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
-
-
-%%
-\/\* BEGIN(COMMENT);
-<COMMENT>\/\*      show_comment_error();
-<COMMENT>{printable_char}*\*\/ BEGIN(INITIAL); showCommentToken();
-
-#({letter}|{number}|(-{letter})){identifier_char}* showToken("HASHID");
-(\"({printable_char_but_double_commas_slash_n}|{partial_escape_sequences})*\")|('({printable_char_but_commas}|{partial_escape_sequences})*') showStringToken();
-
-
-@import showToken("IMPORT");
-!{ws}*[iI][mM][pP][oO][rR][tT][aA][nN][tT]        showToken("IMPORTANT");
-[>\+~]                                            showToken("COMB");
-:                                                 showToken("COLON");
-;                                                 showToken("SEMICOLON");
-\{                                                showToken("LBRACE");
-\}                                                showToken("RBRACE");
-\[                                                showToken("LBRACKET");
-\]                                                showToken("RBRACKET");
-=                                                 showToken("EQUAL");
-\*                                                showToken("ASTERISK");
-\.                                                showToken("DOT");
-({s_num}|{hexadecimal_number})                    showToken("NUMBER");
-(({digit}+)|({digit}*\.{digit}+))([a-z]+|%)       showToken("UNIT");
-rgb({ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*) showToken("RGB");
-
-
-\"              print_error("unclosed string");
-{escape_seq}    print_error("undefined escape sequence");
-rgb             print_error("in rgb parameters");
-%               print_error("%");
-!               print_error("%");
-@               print_error("@");
-{ws} ;
-<COMMENT>.      print_error("unclosed comment");
-(\-)?[a-zA-Z]{identifier_char}* showToken("NAME");
-%%
-
-static int is_printable_char(int hex) {
+static inline int is_printable_char(int hex) {
   return (hex >= 0x20 && hex <= 0x7E)
   || hex == TAB
   || hex == CR
   || hex == LF;
 }
 
-static void shift_string(char *src, int index, int len) {
+static inline void shift_string(char *src, int index, int len) {
   for (char * p = src + index; *p != '\0'; p++) {
     *p = *(p+len);
   }
@@ -96,7 +30,7 @@ static void shift_string(char *src, int index, int len) {
 
 // Given a string and the length of a hex-escaped character, find it's
 // ASCII value
-static int find_ascii(char * str, int size) {
+static inline int find_ascii(char * str, int size) {
   char* escape_seq = malloc(sizeof(char) * (size + 1));
   strncpy(escape_seq, str, size);
   escape_seq[size] = '\0';
@@ -106,7 +40,7 @@ static int find_ascii(char * str, int size) {
 }
 
 
-static int format_next_escape_str(char *src) {
+static inline int format_next_escape_str(char *src) {
   char no_escape_char = *(src+1);
   if(no_escape_char == '\0'){
     return 0;
@@ -160,7 +94,7 @@ static int format_next_escape_str(char *src) {
 
 // Format a STRING lexme and replace all escaped characters
 // With real characters
-static void format_string(char * src) {
+static inline void format_string(char * src) {
   while (*src != '\0') {
     if (*src == '\\') {
       src += format_next_escape_str(src);
@@ -170,7 +104,7 @@ static void format_string(char * src) {
 }
 
 // Remove the brackets of a STRING lexme
-static void remove_brackets(char * dest, char * str, int size) {
+static inline void remove_brackets(char * dest, char * str, int size) {
   if (size < 2) {
     // Should not happen
     return;
@@ -180,7 +114,7 @@ static void remove_brackets(char * dest, char * str, int size) {
   dest[new_size] = '\0';
 }
 
-void showStringToken() {
+void show_string_token() {
   char * formatted = malloc(sizeof(char) * (yyleng - 1));
   int should_format = 1;
   if (yytext[0] == '\"') {
@@ -191,36 +125,21 @@ void showStringToken() {
   if (should_format) {
     format_string(formatted);
   }
-  showTokenMessage("STRING", formatted);
-
+  printf("%d STRING %s\n", yylineno, formatted);
   free (formatted);
 }
 
-void showCommentToken() {
-  char * comment = yytext;
-  int lines = 1;
-  while (*comment != '\0') {
-    if (*comment == '\n' && *(comment + 1) == '\r') {
-      lines++;
-      comment++;
-    } else if(*comment == '\n' || *comment == '\r') {
-      lines++;
-    }
-    comment++;
-  }
-  printf("%d COMMENT %d\n", yylineno, lines);
+void show_comment_token() {
+  printf("%d COMMENT %d\n", yylineno, comment_lines);
+  // Reset the count for the next comment
+  comment_lines = 1;
 }
 
-void showTokenMessage(char * token, char * message) {
-  // TODO Implement properly
-  printf("%d %s %s\n", yylineno, token, message);
+void show_token(char * name) {
+  printf("%d %s %s\n", yylineno, name, yytext);
 }
 
-void showToken(char * name) {
-  showTokenMessage(name, yytext);
-}
-
-void print_error(char * c_name) {
+void error(char * c_name) {
   // TODO Implement
   printf("Error %s\n", c_name);
   exit(0);
@@ -232,6 +151,67 @@ void print_escape_sequence_error() {
 }
 
 void show_comment_error() {
-  printf("Warning nested comment");
+  printf("Warning nested comment\n");
   exit(0);
 }
+
+%}
+
+%option yylineno
+%option noyywrap
+
+%x COMMENT
+
+ws ([\r\n\t ])
+hexadecimal_number ([\+\-]?0x[0-9a-fA-F]+)
+printable_char ([\x20-\x7E\x09\x0A\x0D])
+digit ([0-9])
+identifier_char ([0-9a-zA-Z\-_])
+escape_seq (\\(.+))
+ascii_escape_seq (\\[0-9a-fA-F]{1,6})
+letter ([a-zA-Z])
+s_num ([\+\-]?[0-9]+)
+number ([0-9]+)
+printable_inside_comment ([\x20-\x29\x2B-\x2E\x30-\x7E\t\r])
+printable_string ([\x20-\x21\x23-\x5B\x5D-\x7E\x09])
+printable_string_f ([\x20-\x26\x28-\x5B\x5D-\x7E\x09])
+escape_sequence ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
+
+
+
+%%
+\/\*                                  BEGIN(COMMENT);
+<COMMENT>\/\*                         show_comment_error();
+<COMMENT>{printable_inside_comment}*  ;
+<COMMENT>\n                           comment_lines++;
+<COMMENT>\*\/                         BEGIN(INITIAL); show_comment_token();
+<COMMENT><<EOF>>                      error("unclosed comment");
+
+#({letter}|{number}|(-{letter})){identifier_char}* show_token("HASHID");
+(\"({printable_string}|{escape_sequence})*\")|('({printable_string_f}|{escape_sequence})*') show_string_token();
+
+@import                                           show_token("IMPORT");
+!{ws}*[iI][mM][pP][oO][rR][tT][aA][nN][tT]        show_token("IMPORTANT");
+[>\+~]                                            show_token("COMB");
+:                                                 show_token("COLON");
+;                                                 show_token("SEMICOLON");
+\{                                                show_token("LBRACE");
+\}                                                show_token("RBRACE");
+\[                                                show_token("LBRACKET");
+\]                                                show_token("RBRACKET");
+=                                                 show_token("EQUAL");
+\*                                                show_token("ASTERISK");
+\.                                                show_token("DOT");
+({s_num}|{hexadecimal_number})                    show_token("NUMBER");
+(({digit}+)|({digit}*\.{digit}+))([a-z]+|%)       show_token("UNIT");
+rgb\({ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*\) show_token("RGB");
+
+\"              error("unclosed string");
+{escape_seq}    error("undefined escape sequence");
+rgb             error("in rgb parameters");
+%               error("%");
+!               error("%");
+@               error("@");
+{ws} ;
+(\-)?[a-zA-Z]{identifier_char}* show_token("NAME");
+%%
