@@ -185,6 +185,9 @@ escape_sequence ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
 <COMMENT>{printable_inside_comment}*  ;
 <COMMENT>\n                           comment_lines++;
 <COMMENT>\*\/                         BEGIN(INITIAL); show_comment_token();
+
+<COMMENT>\*                           ;
+<COMMENT>\/                         
 <COMMENT><<EOF>>                      error("unclosed comment");
 
 #({letter}|{number}|(-{letter})){identifier_char}* show_token("HASHID");

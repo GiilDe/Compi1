@@ -376,8 +376,8 @@ static void yy_fatal_error (yyconst char msg[]  );
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
 
-#define YY_NUM_RULES 31
-#define YY_END_OF_BUFFER 32
+#define YY_NUM_RULES 33
+#define YY_END_OF_BUFFER 34
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -387,18 +387,18 @@ struct yy_trans_info
 	};
 static yyconst flex_int16_t yy_accept[111] =
     {   0,
-        0,    0,    3,    3,   32,   31,   29,   27,   23,   31,
-       26,   31,   18,   10,   31,   19,   31,   20,   20,   11,
-       12,   17,   10,   28,   30,   15,   31,   16,   30,   13,
-       14,    3,    4,   31,   31,    0,    0,    0,    7,    0,
-        0,    6,    6,    0,    0,   20,   20,   30,    0,    1,
-       21,    0,   20,   21,   21,    0,   30,   24,   30,    3,
-        5,    2,    0,    0,    6,    6,    0,    0,   20,   20,
-        0,   25,    0,    0,    0,    0,    0,    0,    0,    0,
+        0,    0,    3,    3,   34,   33,   31,   29,   25,   33,
+       28,   33,   20,   12,   33,   21,   33,   22,   22,   13,
+       14,   19,   12,   30,   32,   17,   33,   18,   32,   15,
+       16,    3,    4,    6,    7,    0,    0,    0,    9,    0,
+        0,    8,    8,    0,    0,   22,   22,   32,    0,    1,
+       23,    0,   22,   23,   23,    0,   32,   26,   32,    3,
+        5,    2,    0,    0,    8,    8,    0,    0,   22,   22,
+        0,   27,    0,    0,    0,    0,    0,    0,    0,    0,
         0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-        0,    0,    0,    8,    0,    0,    0,    0,    0,    0,
+        0,    0,    0,   10,    0,    0,    0,    0,    0,    0,
 
-        0,    0,    0,    0,    0,    0,    9,    0,   22,    0
+        0,    0,    0,    0,    0,    0,   11,    0,   24,    0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
@@ -636,10 +636,10 @@ static yyconst flex_int16_t yy_chk[675] =
     } ;
 
 /* Table of booleans, true if rule could match eol. */
-static yyconst flex_int32_t yy_rule_can_match_eol[32] =
+static yyconst flex_int32_t yy_rule_can_match_eol[34] =
     {   0,
-0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-    0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0,     };
+0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0,     };
 
 static yy_state_type yy_last_accepting_state;
 static char *yy_last_accepting_cpos;
@@ -1118,144 +1118,154 @@ YY_RULE_SETUP
 #line 187 "hw1.lex"
 BEGIN(INITIAL); show_comment_token();
 	YY_BREAK
-case YY_STATE_EOF(COMMENT):
-#line 188 "hw1.lex"
-error("unclosed comment");
-	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 190 "hw1.lex"
-show_token("HASHID");
+#line 189 "hw1.lex"
+;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
+#line 190 "hw1.lex"
+
+	YY_BREAK
+case YY_STATE_EOF(COMMENT):
 #line 191 "hw1.lex"
-show_string_token();
+error("unclosed comment");
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
 #line 193 "hw1.lex"
-show_token("IMPORT");
+show_token("HASHID");
 	YY_BREAK
 case 9:
-/* rule 9 can match eol */
 YY_RULE_SETUP
 #line 194 "hw1.lex"
-show_token("IMPORTANT");
+show_string_token();
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 195 "hw1.lex"
-show_token("COMB");
+#line 196 "hw1.lex"
+show_token("IMPORT");
 	YY_BREAK
 case 11:
+/* rule 11 can match eol */
 YY_RULE_SETUP
-#line 196 "hw1.lex"
-show_token("COLON");
+#line 197 "hw1.lex"
+show_token("IMPORTANT");
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 197 "hw1.lex"
-show_token("SEMICOLON");
+#line 198 "hw1.lex"
+show_token("COMB");
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 198 "hw1.lex"
-show_token("LBRACE");
+#line 199 "hw1.lex"
+show_token("COLON");
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 199 "hw1.lex"
-show_token("RBRACE");
+#line 200 "hw1.lex"
+show_token("SEMICOLON");
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 200 "hw1.lex"
-show_token("LBRACKET");
+#line 201 "hw1.lex"
+show_token("LBRACE");
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 201 "hw1.lex"
-show_token("RBRACKET");
+#line 202 "hw1.lex"
+show_token("RBRACE");
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 202 "hw1.lex"
-show_token("EQUAL");
+#line 203 "hw1.lex"
+show_token("LBRACKET");
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 203 "hw1.lex"
-show_token("ASTERISK");
+#line 204 "hw1.lex"
+show_token("RBRACKET");
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 204 "hw1.lex"
-show_token("DOT");
+#line 205 "hw1.lex"
+show_token("EQUAL");
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 205 "hw1.lex"
-show_token("NUMBER");
+#line 206 "hw1.lex"
+show_token("ASTERISK");
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 206 "hw1.lex"
-show_token("UNIT");
+#line 207 "hw1.lex"
+show_token("DOT");
 	YY_BREAK
 case 22:
-/* rule 22 can match eol */
 YY_RULE_SETUP
-#line 207 "hw1.lex"
-show_token("RGB");
+#line 208 "hw1.lex"
+show_token("NUMBER");
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
 #line 209 "hw1.lex"
-error("unclosed string");
+show_token("UNIT");
 	YY_BREAK
 case 24:
+/* rule 24 can match eol */
 YY_RULE_SETUP
 #line 210 "hw1.lex"
-error("undefined escape sequence");
+show_token("RGB");
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 211 "hw1.lex"
-error("in rgb parameters");
+#line 212 "hw1.lex"
+error("unclosed string");
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 212 "hw1.lex"
-error("%");
+#line 213 "hw1.lex"
+error("undefined escape sequence");
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 213 "hw1.lex"
-error("%");
+#line 214 "hw1.lex"
+error("in rgb parameters");
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 214 "hw1.lex"
-error("@");
+#line 215 "hw1.lex"
+error("%");
 	YY_BREAK
 case 29:
-/* rule 29 can match eol */
 YY_RULE_SETUP
-#line 215 "hw1.lex"
-;
+#line 216 "hw1.lex"
+error("%");
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 216 "hw1.lex"
-show_token("NAME");
+#line 217 "hw1.lex"
+error("@");
 	YY_BREAK
 case 31:
+/* rule 31 can match eol */
 YY_RULE_SETUP
-#line 217 "hw1.lex"
+#line 218 "hw1.lex"
+;
+	YY_BREAK
+case 32:
+YY_RULE_SETUP
+#line 219 "hw1.lex"
+show_token("NAME");
+	YY_BREAK
+case 33:
+YY_RULE_SETUP
+#line 220 "hw1.lex"
 ECHO;
 	YY_BREAK
-#line 1259 "lex.yy.c"
+#line 1269 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2264,7 +2274,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 217 "hw1.lex"
+#line 220 "hw1.lex"
 
 
 
