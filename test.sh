@@ -9,6 +9,10 @@ echo "*********************************************"
 TEST_DIR="./tests/"
 LEX_FILE_NAME=$2
 
+function sep {
+  echo "*********************************************"
+}
+
 function my_test {
   TEST_NAME="${TEST_DIR}$1"
   IN_FILE="${TEST_NAME}.css"
@@ -18,13 +22,10 @@ function my_test {
   ./a.out < "$IN_FILE" | diff - "$OUT_FILE"
   if [ ! $? -eq 0 ]
   then
-     echo "Test $1 failed. Exiting"
-     exit 1
+    sep
+    echo "Test $1 failed. Exiting"
+    exit 1
   fi
-}
-
-function sep {
-  echo "*********************************************"
 }
 
 # Setup
@@ -73,6 +74,10 @@ my_test "staff/t2"
 # Basic tests
 my_test "basic/basic1"
 my_test "basic/basic2"
+
+# Specific tests
+my_test "spec/comments"
+my_test "spec/strings"
 
 # Cleanup
 sep

@@ -40,10 +40,10 @@ static inline int find_ascii(char * str, int size) {
 }
 
 
-static inline int format_next_escape_str(char *src) {
+static inline void format_next_escape_str(char *src) {
   char no_escape_char = *(src+1);
   if(no_escape_char == '\0'){
-    return 0;
+    return;
   }
 
   char escaped_char;
@@ -63,7 +63,6 @@ static inline int format_next_escape_str(char *src) {
     for (char * p = src + 1; *p != '\0'; p++) {
       *p = *(p+1);
     }
-    return 0;
   } else {
     // We assume it is a hex-escaped character
     char * p = src + 1;
@@ -87,9 +86,7 @@ static inline int format_next_escape_str(char *src) {
       *p = *(p + len + src_offset);
       p++;
     }
-    return 1;
   }
-  return 0;
 }
 
 // Format a STRING lexme and replace all escaped characters
@@ -97,7 +94,7 @@ static inline int format_next_escape_str(char *src) {
 static inline void format_string(char * src) {
   while (*src != '\0') {
     if (*src == '\\') {
-      src += format_next_escape_str(src);
+      format_next_escape_str(src);
     }
     src++;
   }
@@ -161,13 +158,13 @@ void show_comment_error() {
 %option noyywrap
 
 %x COMMENT
+%x STRING
 
 ws ([\r\n\t ])
 hexadecimal_number ([\+\-]?0x[0-9a-fA-F]+)
 printable_char ([\x20-\x7E\x09\x0A\x0D])
 digit ([0-9])
 identifier_char ([0-9a-zA-Z\-_])
-escape_seq (\\(.+))
 ascii_escape_seq (\\[0-9a-fA-F]{1,6})
 letter ([a-zA-Z])
 s_num ([\+\-]?[0-9]+)
@@ -187,10 +184,11 @@ escape_sequence ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
 <COMMENT>\*\/                         BEGIN(INITIAL); show_comment_token();
 
 <COMMENT>\*                           ;
-<COMMENT>\/                         
+<COMMENT>\/
 <COMMENT><<EOF>>                      error("unclosed comment");
 
 #({letter}|{number}|(-{letter})){identifier_char}* show_token("HASHID");
+
 (\"({printable_string}|{escape_sequence})*\")|('({printable_string_f}|{escape_sequence})*') show_string_token();
 
 @import                                           show_token("IMPORT");
@@ -209,8 +207,8 @@ escape_sequence ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
 (({digit}+)|({digit}*\.{digit}+))([a-z]+|%)       show_token("UNIT");
 rgb\({ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*\) show_token("RGB");
 
+\".*\\(.)+.*\"  error("undefined escape sequence");
 \"              error("unclosed string");
-{escape_seq}    error("undefined escape sequence");
 rgb             error("in rgb parameters");
 %               error("%");
 !               error("%");
