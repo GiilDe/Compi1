@@ -152,13 +152,21 @@ void show_comment_error() {
   exit(0);
 }
 
+void illegal_escape_sequence(){
+    char* del_first = yytext + 1;
+    printf("Error undefined escape sequence %s\n", del_first);
+    exit(0);
+}
+
 %}
 
 %option yylineno
 %option noyywrap
 
 %x COMMENT
-%x STRING
+%x STRING_ONE
+%x STRING_TWO
+
 
 ws ([\r\n\t ])
 hexadecimal_number ([\+\-]?0x[0-9a-fA-F]+)
@@ -170,26 +178,34 @@ letter ([a-zA-Z])
 s_num ([\+\-]?[0-9]+)
 number ([0-9]+)
 printable_inside_comment ([\x20-\x29\x2B-\x2E\x30-\x7E\t\r])
-printable_string ([\x20-\x21\x23-\x5B\x5D-\x7E\x09])
-printable_string_f ([\x20-\x26\x28-\x5B\x5D-\x7E\x09])
+printable_string_char ([\x20-\x21\x23-\x5B\x5D-\x7E\x09])
+printable_string_char_f ([\x20-\x26\x28-\x5B\x5D-\x7E\x09])
 escape_sequence ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
+escape_sequence_no_downline ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
 
 
 
 %%
-\/\*                                  BEGIN(COMMENT);
-<COMMENT>\/\*                         show_comment_error();
-<COMMENT>{printable_inside_comment}*  ;
-<COMMENT>\n                           comment_lines++;
-<COMMENT>\*\/                         BEGIN(INITIAL); show_comment_token();
+\/\*                                      BEGIN(COMMENT);
+<COMMENT>\/\*                             show_comment_error();
+<COMMENT>{printable_inside_comment}*      ;
+<COMMENT>\n                               comment_lines++;
+<COMMENT>\*\/                             BEGIN(INITIAL); show_comment_token();
+<COMMENT>\*                               ;
+<COMMENT>\/                               ;
+<COMMENT><<EOF>>                          error("unclosed comment");
+\"                                        BEGIN(STRING_ONE);
+\'                                        BEGIN(STRING_TWO);
+<STRING_ONE,STRING_TWO>\\n                error("unclosed string");
+<STRING_ONE,STRING_TWO>(({printable_string_char}|{escape_sequence_no_downline})*)|(({printable_string_char_f}|{escape_sequence_no_downline})*) ;
+<STRING_ONE,STRING_TWO>\\printable_char   illegal_escape_sequence();
+<STRING_ONE>\"                            BEGIN(INITIAL);
+<STRING_TWO>\'                            BEGIN(INITIAL);
 
-<COMMENT>\*                           ;
-<COMMENT>\/
-<COMMENT><<EOF>>                      error("unclosed comment");
 
 #({letter}|{number}|(-{letter})){identifier_char}* show_token("HASHID");
+(\"({printable_string_char}|{escape_sequence})*\")|('({printable_string_char_f}|{escape_sequence})*') show_string_token();
 
-(\"({printable_string}|{escape_sequence})*\")|('({printable_string_f}|{escape_sequence})*') show_string_token();
 
 @import                                           show_token("IMPORT");
 !{ws}*[iI][mM][pP][oO][rR][tT][aA][nN][tT]        show_token("IMPORTANT");
