@@ -137,14 +137,13 @@ void show_token(char * name) {
 }
 
 void error(char * c_name) {
-  // TODO Implement
   printf("Error %s\n", c_name);
   exit(0);
 }
 
-void print_escape_sequence_error() {
-  // TODO: Fix not showing sequence
-  printf("Error undefined escape sequence %s\n", yytext);
+void unclosed_string(){
+  printf("Error unclosed string\n");
+  exit(0);
 }
 
 void show_comment_error() {
@@ -153,8 +152,7 @@ void show_comment_error() {
 }
 
 void illegal_escape_sequence(){
-    char* del_first = yytext + 1;
-    printf("Error undefined escape sequence %s\n", del_first);
+    printf("Error undefined escape sequence %s\n", ++yytext);
     exit(0);
 }
 
@@ -181,7 +179,7 @@ printable_inside_comment ([\x20-\x29\x2B-\x2E\x30-\x7E\t\r])
 printable_string_char ([\x20-\x21\x23-\x5B\x5D-\x7E\x09])
 printable_string_char_f ([\x20-\x26\x28-\x5B\x5D-\x7E\x09])
 escape_sequence ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
-escape_sequence_no_downline ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
+escape_sequence_no_downline ((\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
 
 
 
@@ -196,9 +194,9 @@ escape_sequence_no_downline ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
 <COMMENT><<EOF>>                          error("unclosed comment");
 \"                                        BEGIN(STRING_ONE);
 \'                                        BEGIN(STRING_TWO);
-<STRING_ONE,STRING_TWO>\\n                error("unclosed string");
+<STRING_ONE,STRING_TWO>\n                 unclosed_string();
 <STRING_ONE,STRING_TWO>(({printable_string_char}|{escape_sequence_no_downline})*)|(({printable_string_char_f}|{escape_sequence_no_downline})*) ;
-<STRING_ONE,STRING_TWO>\\printable_char   illegal_escape_sequence();
+<STRING_ONE,STRING_TWO>\\{printable_string_char}  illegal_escape_sequence();
 <STRING_ONE>\"                            BEGIN(INITIAL);
 <STRING_TWO>\'                            BEGIN(INITIAL);
 
@@ -223,8 +221,6 @@ escape_sequence_no_downline ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
 (({digit}+)|({digit}*\.{digit}+))([a-z]+|%)       show_token("UNIT");
 rgb\({ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*,{ws}*{s_num}{ws}*\) show_token("RGB");
 
-\".*\\(.)+.*\"  error("undefined escape sequence");
-\"              error("unclosed string");
 rgb             error("in rgb parameters");
 %               error("%");
 !               error("%");
