@@ -1,3 +1,5 @@
 .idea/
 cmake-build-debug/
 CMakeLists.txt
+a.out
+lex.yy.c
