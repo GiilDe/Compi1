@@ -57,7 +57,7 @@ fi
 echo "Compiling lexical analyzer..."
 sep
 
-gcc -ll lex.yy.c
+gcc -std=c99 -ll lex.yy.c
 if [ ! $? -eq 0 ]
 then
    echo "GCC failed to compile lexer. Aborting tests"
