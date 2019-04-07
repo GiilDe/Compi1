@@ -1,23 +1,23 @@
 1 STRING simple string #1
 2 STRING simple string #2
 3 STRING many tagss'''''''''
-4 STRING many quotes """" 
+4 STRING many quotes """"
 5 STRING h\n\te\n\t\tl\n\t\t\tl\n\t\t\t\to\n
-6 STRING 
+6 STRING
 h
 	e
 		l
 			l
 				o
 
-7 STRING 
-8 STRING 
-9 STRING 
-10 STRING 
-11 STRING 
-12 STRING 
-13 STRING 
-14 STRING 
+7 STRING
+8 STRING
+9 STRING
+10 STRING
+11 STRING
+12 STRING
+13 STRING
+14 STRING
 15 STRING a
 16 STRING \n
 17 STRING :
@@ -27,4 +27,4 @@ h
 21 STRING not legal letters
 22 STRING \this\is"completely\healthy"
 23 STRING IF YOU GOT HERE WELL DONE :D
-Error undefined escape sequence \GOODLUCK
+Error undefined escape sequence G

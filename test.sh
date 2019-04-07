@@ -9,6 +9,16 @@ echo "*********************************************"
 TEST_DIR="./tests/"
 LEX_FILE_NAME=$2
 
+function cleanup {
+  rm "./a.out"
+  rm "./lex.yy.c"
+}
+
+function error {
+  cleanup > \dev\null
+  exit 1
+}
+
 function sep {
   echo "*********************************************"
 }
@@ -24,7 +34,7 @@ function my_test {
   then
     sep
     echo "Test $1 failed. Exiting"
-    exit 1
+    error
   fi
 }
 
@@ -41,7 +51,7 @@ fi
 
 if [ ! -f "$LEX_FILE_NAME" ]; then
   echo "Flex file not found. please make sure your file is within the same directory as this test file, and that it's named hw1.lex (Or run as: test.sh <file_name>)"
-  exit 1
+  error
 fi
 
 echo "Flex file found! Generating lexical analyzer..."
@@ -51,7 +61,7 @@ flex $LEX_FILE_NAME
 if [ ! $? -eq 0 ]
 then
    echo "Flex failed to compile. Aborting tests"
-   exit 1
+   error
 fi
 
 echo "Compiling lexical analyzer..."
@@ -61,7 +71,7 @@ gcc -std=c99 -ll lex.yy.c
 if [ ! $? -eq 0 ]
 then
    echo "GCC failed to compile lexer. Aborting tests"
-   exit 1
+   error
 fi
 
 echo "Running tests"
@@ -80,5 +90,6 @@ my_test "spec/comments"
 my_test "spec/strings"
 
 # Cleanup
+cleanup
 sep
 echo "All tests passed! well done :)"
