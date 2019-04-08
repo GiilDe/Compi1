@@ -87,7 +87,34 @@ my_test "basic/basic2"
 
 # Specific tests
 my_test "spec/comments"
-my_test "spec/strings"
+# my_test "spec/strings"
+
+# Saifun tests
+my_test "spec2/at"
+my_test "spec2/commentNonP1"
+my_test "spec2/commentNonP2"
+my_test "spec2/ex"
+my_test "spec2/goodCases"
+my_test "spec2/im1"
+my_test "spec2/moreComplicated"
+my_test "spec2/nest"
+my_test "spec2/num1"
+my_test "spec2/percent"
+my_test "spec2/rgb1"
+my_test "spec2/rgb2"
+my_test "spec2/rgb3"
+my_test "spec2/rgb4"
+my_test "spec2/rgb5"
+my_test "spec2/string1"
+my_test "spec2/string2"
+my_test "spec2/string3"
+my_test "spec2/string4"
+my_test "spec2/string5"
+my_test "spec2/string6"
+my_test "spec2/string7"
+my_test "spec2/string8"
+my_test "spec2/string9"
+my_test "spec2/string10"
 
 # Cleanup
 cleanup

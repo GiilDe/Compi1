@@ -167,18 +167,19 @@ void illegal_escape_sequence(){
 
 
 ws ([\r\n\t ])
-hexadecimal_number ([\+\-]?0x[0-9a-fA-F]+)
+hex_digit ([0-9a-fA-F])
+hexadecimal_number ([\+\-]?0x{hex_digit}+)
 printable_char ([\x20-\x7E\x09\x0A\x0D])
 digit ([0-9])
 identifier_char ([0-9a-zA-Z\-_])
-ascii_escape_seq (\\[0-9a-fA-F]{1,6})
+ascii_escape_seq (\\{hex_digit}{1,6})
 letter ([a-zA-Z])
-s_num ([\+\-]?[0-9]+)
-number ([0-9]+)
+number ({digit}+)
+s_num ([\+\-]?{number})
 printable_inside_comment ([\x20-\x29\x2B-\x2E\x30-\x7E\t\r])
 printable_string_char ([\x20-\x21\x23-\x5B\x5D-\x7E\x09])
 printable_string_char_f ([\x20-\x26\x28-\x5B\x5D-\x7E\x09])
-escape_sequence ((\\n)|(\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
+escape_sequence ((\\n)|(\\r)|(\\t)|(\\\\)|{ascii_escape_seq})
 escape_sequence_no_downline ((\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
 
 
@@ -192,13 +193,16 @@ escape_sequence_no_downline ((\\r)|(\\t)|(\\\\)|(\\[0-9a-fA-F]{1,6}))
 <COMMENT>\*                               ;
 <COMMENT>\/                               ;
 <COMMENT><<EOF>>                          error("unclosed comment");
+
 \"                                        BEGIN(STRING_ONE);
 \'                                        BEGIN(STRING_TWO);
-<STRING_ONE,STRING_TWO>\n                 unclosed_string();
-<STRING_ONE,STRING_TWO>(({printable_string_char}|{escape_sequence_no_downline})*)|(({printable_string_char_f}|{escape_sequence_no_downline})*) ;
-<STRING_ONE,STRING_TWO>\\{printable_string_char}  illegal_escape_sequence();
 <STRING_ONE>\"                            BEGIN(INITIAL);
 <STRING_TWO>\'                            BEGIN(INITIAL);
+<STRING_ONE,STRING_TWO>\n                 unclosed_string();
+
+
+<STRING_ONE,STRING_TWO>(({printable_string_char}|{escape_sequence_no_downline})*)|(({printable_string_char_f}|{escape_sequence_no_downline})*) ;
+<STRING_ONE,STRING_TWO>\\{printable_string_char}  illegal_escape_sequence();
 
 
 #({letter}|{number}|(-{letter})){identifier_char}* show_token("HASHID");
@@ -227,4 +231,5 @@ rgb             error("in rgb parameters");
 @               error("@");
 {ws} ;
 (\-)?[a-zA-Z]{identifier_char}* show_token("NAME");
+<INITIAL,COMMENT>. printf("Error %s", yytext);
 %%
