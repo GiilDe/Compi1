@@ -137,6 +137,7 @@ void show_token(char * name) {
 }
 
 void append_curr_str(char * suffix) {
+  printf("CAUGHT: %s\n", suffix);
   if (!curr_str) {
     curr_str = suffix;
     return;
@@ -148,6 +149,23 @@ void append_curr_str(char * suffix) {
   curr_str[0] = '\0';
   strcat(curr_str, prefix);
   strcat(curr_str, suffix);
+  printf("CURR: %s\n", curr_str);
+}
+
+void append_escape_seq() {
+  char hex = (char) strtol(++yytext, NULL, 16);
+  printf("ESCAPE CURR: %c\n", hex);
+  if (!curr_str) {
+    curr_str = malloc(sizeof(char));
+    curr_str[0] = hex;
+    return;
+  }
+  char * prefix = curr_str;
+  curr_str = malloc(sizeof(char) * (strlen(prefix) + 2));
+  curr_str[0] = '\0';
+  strcat(curr_str, prefix);
+  curr_str[strlen(curr_str) - 1] = hex;
+  curr_str[strlen(curr_str)] = '\0';
 }
 
 void show_string() {
@@ -158,6 +176,7 @@ void show_string() {
   int len = strlen(curr_str);
   curr_str[len - 1] = 0;
   printf("%d STRING %s\n", yylineno, curr_str);
+  curr_str = NULL;
 }
 
 void show_escape_seq() {
@@ -237,7 +256,7 @@ esc_seq ((\\n)|{esc_seq_no_lf})
 <STRING_TWO>\\t                           append_curr_str("\t");
 <STRING_TWO>\\r                           append_curr_str("\r");
 <STRING_TWO>\\\\                          append_curr_str("\\");
-<STRING_TWO>{ascii_escape_seq}            show_escape_seq();
+<STRING_TWO>{ascii_escape_seq}            append_escape_seq();
 <STRING_ONE,STRING_TWO>\\{printable_string_char}  illegal_escape_sequence();
 <STRING_TWO>{printable_string_char_f}*    append_curr_str(yytext);
 
