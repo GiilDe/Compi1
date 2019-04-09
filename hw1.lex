@@ -6,125 +6,16 @@
 #define TAB   0x09
 #define LF    0x0A
 #define CR    0x0D
-//
-// #define IS_ASCII(char) \
-//   (((char) >= '0' && (char) <= '9') \
-//   || ((char) >= 'a' && (char) <= 'f') \
-//   || ((char) >= 'A' && (char) <= 'F') \
-//   )
-//
+
 int comment_lines = 1;
 char * curr_str = NULL;
-//
+
 static inline int is_printable_char(int hex) {
   return (hex >= 0x20 && hex <= 0x7E)
   || hex == TAB
   || hex == CR
   || hex == LF;
 }
-//
-// static inline void shift_string(char *src, int index, int len) {
-//   for (char * p = src + index; *p != '\0'; p++) {
-//     *p = *(p+len);
-//   }
-// }
-//
-// // Given a string and the length of a hex-escaped character, find it's
-// // ASCII value
-// static inline int find_ascii(char * str, int size) {
-//   char* escape_seq = malloc(sizeof(char) * (size + 1));
-//   strncpy(escape_seq, str, size);
-//   escape_seq[size] = '\0';
-//   int hex = strtol(escape_seq, NULL, 16);
-//   free(escape_seq);
-//   return hex;
-// }
-//
-// static inline void format_next_escape_str(char *src) {
-//   char no_escape_char = *(src+1);
-//   if(no_escape_char == '\0'){
-//     return;
-//   }
-//
-//   char escaped_char;
-//   int should_escape = 1;
-//   int is_hex = 0;
-//   // Handle case of a single-character escape
-//   switch (no_escape_char) {
-//     case 'n': escaped_char = '\n'; break;
-//     case 'r': escaped_char = '\r'; break;
-//     case 't': escaped_char = '\t'; break;
-//     case '\\': escaped_char = '\\'; break;
-//     default: should_escape = 0;
-//   }
-//
-//   if(should_escape) {
-//     *src = escaped_char;
-//     for (char * p = src + 1; *p != '\0'; p++) {
-//       *p = *(p+1);
-//     }
-//   } else {
-//     // We assume it is a hex-escaped character
-//     char * p = src + 1;
-//     int len = 0;
-//     // Count the length of the escaped ascii string [1-6]
-//     while (len < 6 && IS_ASCII(p[len])) len++;
-//     int ascii = find_ascii(p, len);
-//
-//     int src_offset;
-//     if (is_printable_char(ascii)) {
-//       // Print it
-//       *src = (char) ascii;
-//       src_offset = 0;
-//     } else {
-//       // Ignore it
-//       src_offset = 1;
-//       p--;
-//     }
-//
-//     while (*(p + len - 1) != '\0') {
-//       *p = *(p + len + src_offset);
-//       p++;
-//     }
-//   }
-// }
-//
-// // Format a STRING lexme and replace all escaped characters
-// // With real characters
-// static inline void format_string(char * src) {
-//   while (*src != '\0') {
-//     if (*src == '\\') {
-//       format_next_escape_str(src);
-//     }
-//     src++;
-//   }
-// }
-//
-// // Remove the brackets of a STRING lexme
-// static inline void remove_brackets(char * dest, char * str, int size) {
-//   if (size < 2) {
-//     // Should not happen
-//     return;
-//   }
-//   int new_size = size - 2;
-//   strcpy(dest, ++str);
-//   dest[new_size] = '\0';
-// }
-//
-// void show_string_token() {
-//   char * formatted = malloc(sizeof(char) * (yyleng - 1));
-//   int should_format = 1;
-//   if (yytext[0] == '\"') {
-//     should_format = 0;
-//   }
-//
-//   remove_brackets(formatted, yytext, yyleng);
-//   if (should_format) {
-//     format_string(formatted);
-//   }
-//   printf("%d STRING %s\n", yylineno, formatted);
-//   free (formatted);
-// }
 
 void show_comment_token() {
   printf("%d COMMENT %d\n", yylineno, comment_lines);
@@ -137,6 +28,7 @@ void show_token(char * name) {
 }
 
 void append_curr_str(char * suffix) {
+  // printf("Appending: %s\n", suffix);
   if (!curr_str) {
     curr_str = malloc(sizeof(char) * (strlen(suffix) + 1));
     strcpy(curr_str, suffix);
@@ -177,15 +69,9 @@ void show_string() {
     return;
   }
   int len = strlen(curr_str);
-  curr_str[len - 1] = 0;
+  // curr_str[len - 1] = 0;
   printf("%d STRING %s\n", yylineno, curr_str);
   curr_str = NULL;
-}
-
-void show_escape_seq() {
-  // printf("\nESCAPE: %s\n", yytext);
-  int hex = strtol(++yytext, NULL, 16);
-  if (is_printable_char(hex)) printf("%c", (char)hex);
 }
 
 void error(char * c_name) {
@@ -193,17 +79,12 @@ void error(char * c_name) {
   exit(0);
 }
 
-void unclosed_string(){
-  printf("Error unclosed string\n");
-  exit(0);
-}
-
-void show_comment_error() {
+static inline void show_comment_error() {
   printf("Warning nested comment\n");
   exit(0);
 }
 
-void illegal_escape_sequence(){
+static inline void illegal_escape_sequence(){
     printf("Error undefined escape sequence %s\n", ++yytext);
     exit(0);
 }
@@ -248,9 +129,7 @@ esc_seq ((\\n)|{esc_seq_no_lf})
 
 \"                                        BEGIN(STRING_ONE);
 <STRING_ONE>\"                            BEGIN(INITIAL); show_string();
-<STRING_ONE>({printable_string_char}|{esc_seq})* {
-                                            curr_str = yytext;
-                                          }
+<STRING_ONE>({printable_string_char}|{esc_seq})* append_curr_str(yytext);
 
 
 \'                                        BEGIN(STRING_TWO);
@@ -262,6 +141,7 @@ esc_seq ((\\n)|{esc_seq_no_lf})
 <STRING_TWO>{ascii_escape_seq}            append_escape_seq();
 <STRING_ONE,STRING_TWO>\\{printable_string_char}  illegal_escape_sequence();
 <STRING_TWO>{printable_string_char_f}*    append_curr_str(yytext);
+<STRING_ONE,STRING_TWO><<EOF>>            error("unclosed string");
 
 #((-?{letter})|{num}){identifier_char}*       show_token("HASHID");
 @import                                       show_token("IMPORT");
@@ -281,10 +161,7 @@ esc_seq ((\\n)|{esc_seq_no_lf})
 rgb\({rgb_num},{rgb_num},{rgb_num}\)          show_token("RGB");
 
 rgb             error("in rgb parameters");
-%               error("%");
-!               error("!");
-@               error("@");
 (\-)?[a-zA-Z]{identifier_char}* show_token("NAME");
-{ws} ;
+{ws}            ;
 .               error(yytext);
 %%
