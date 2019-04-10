@@ -88,6 +88,8 @@ my_test "basic/basic2"
 # Specific tests
 my_test "spec/comments"
 # my_test "spec/strings"
+my_test "spec/eof"
+my_test "spec/eof2"
 
 # Saifun tests
 my_test "spec2/at"

@@ -1,7 +1,7 @@
 1 STRING simple string #1
 2 STRING simple string #2
 3 STRING many tagss'''''''''
-4 STRING many quotes """"
+4 STRING many quotes """" 
 5 STRING h\n\te\n\t\tl\n\t\t\tl\n\t\t\t\to\n
 6 STRING
 h
