@@ -38,7 +38,7 @@ fi
 mkdir "$tmpdir" &> /dev/null
 
 unzip "$1" -d "$tmpdir" &> /dev/null
-if [[ $? != 0 ]] 
+if [[ $? != 0 ]]
 	then
 		echo "Unable to unzip submission file!"
 		exit
@@ -57,13 +57,13 @@ if [ $( ls -1 | wc -l ) != 1 ]
 fi
 
 flex hw1.lex &> /dev/null
-if [[ $? != 0 ]] 
+if [[ $? != 0 ]]
 	then
 		echo "Cannot build submission!"
 		exit
 fi
 gcc -ll lex.yy.c &> /dev/null
-if [[ $? != 0 ]] 
+if [[ $? != 0 ]]
 	then
 		echo "Cannot build submission!"
 		exit
@@ -82,7 +82,7 @@ if [ ! -f $( basename "$testsurl" ) ]
 fi
 
 unzip $( basename "$testsurl" ) &> /dev/null
-if [[ $? != 0 ]] 
+if [[ $? != 0 ]]
 	then
 		echo "Unable to unzip tests!"
 		exit
@@ -93,7 +93,7 @@ while [ $i -le $numtests ]
 	do
 		eval $command
 		diff t$i.res t$i.out &> /dev/null
-		if [[ $? != 0 ]] 
+		if [[ $? != 0 ]]
 			then
 				echo "Failed test #"$i"!"
 				exit
