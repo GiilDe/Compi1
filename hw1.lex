@@ -89,20 +89,20 @@ static inline void illegal_escape_sequence(){
 %x STRING_TWO
 
 ws                    ([\r\n\t ])
-hex_digit             ([0-9a-fA-F])
-hexadecimal_number    ([\+\-]?0x{hex_digit}+)
-printable_char        ([\x20-\x7E\x09\x0A\x0D])
 digit                 ([0-9])
-identifier_char       ([0-9a-zA-Z\-_])
-ascii_escape_seq      (\\({hex_digit}){1,6})
 letter                ([a-zA-Z])
+hex_digit             ([0-9a-fA-F])
+hex_num               ([\+\-]?0x{hex_digit}+)
+printable_char        ([\x20-\x7E\x09\x0A\x0D])
+identifier_char       ({digit}|{letter}|[\-_])
+ascii_escape_seq      (\\({hex_digit}){1,6})
 num                   ({digit}+)
 s_num                 ([\+\-]?{num})
 rgb_num               ({ws}*{s_num}{ws}*)
-esc_seq_no_lf         ((\\r)|(\\t)|(\\\\)|{ascii_escape_seq})
 printable_in_comment  ([\x20-\x29\x2B-\x2E\x30-\x7E\t\r])
 printable_str_c       ([\x20-\x21\x23-\x5B\x5D-\x7E\x09])
 printable_str_c_f     ([\x20-\x26\x28-\x5B\x5D-\x7E\x09])
+esc_seq_no_lf         ((\\r)|(\\t)|(\\\\)|{ascii_escape_seq})
 esc_seq               ((\\n)|{esc_seq_no_lf})
 
 %%
@@ -132,8 +132,9 @@ esc_seq               ((\\n)|{esc_seq_no_lf})
 <STRING_TWO>{ascii_escape_seq}                append_escape_seq();
 <STRING_ONE,STRING_TWO>\\{printable_str_c}    illegal_escape_sequence();
 <STRING_TWO>{printable_str_c_f}*              append_curr_str(yytext);
-<STRING_TWO>.                                 error("'");
+<STRING_ONE,STRING_TWO>\n                     error("unclosed string");
 <STRING_ONE,STRING_TWO><<EOF>>                error("unclosed string");
+<STRING_TWO>.                                 error("'");
 
 
 #((-?{letter})|{num}){identifier_char}*       show_token("HASHID");
@@ -149,7 +150,7 @@ esc_seq               ((\\n)|{esc_seq_no_lf})
 =                                             show_token("EQUAL");
 \*                                            show_token("ASTERISK");
 \.                                            show_token("DOT");
-({s_num}|{hexadecimal_number})                show_token("NUMBER");
+({s_num}|{hex_num})                show_token("NUMBER");
 (({digit}+)|({digit}*\.{digit}+))([a-z]+|%)   show_token("UNIT");
 rgb\({rgb_num},{rgb_num},{rgb_num}\)          show_token("RGB");
 rgb                                           error("in rgb parameters");
